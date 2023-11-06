@@ -45,12 +45,12 @@ namespace BS_Web_Api.Services.UserService
             }
         }
 
-        public User? GetById(Guid userId)
+        public User? GetById(String userId)
         {
 
             try
             {
-             User? user=   _dbcontext.Users.FirstOrDefault(e=>e.Equals(userId));
+             User? user=   _dbcontext.Users.FirstOrDefault(e=>e.Id.ToString().Equals(userId));
                 if (user==null)
                     return null;
                 return user;

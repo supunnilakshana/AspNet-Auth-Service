@@ -89,24 +89,19 @@ namespace BS_Web_Api.Helpers
 
         }
 
-        public RefreshToken GenerateRefreshToken(String userId)
+        public RefreshToken? GetRefreshToken(String userId)
         {
             User? user = _appDbContext.Users.FirstOrDefault(x => x.Id.ToString().Equals(userId));
             if (user == null)
             {
-                throw new Exception("Invalid User Id");
+                return null;
             }
             var refreshToken = new RefreshToken
             {
-                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-                Expires = DateTime.Now.AddDays(7),
-                Created = DateTime.Now
+                Token = user.RefreshToken,
+                Expires = user.TokenExpires,
+                Created = user.TokenCreated
             };
-            user.RefreshToken = refreshToken.Token;
-            user.TokenCreated = refreshToken.Created;
-            user.TokenExpires = refreshToken.Expires;
-            _appDbContext.Users.Update(user);
-            _appDbContext.SaveChanges();
             return refreshToken;
 
         }
