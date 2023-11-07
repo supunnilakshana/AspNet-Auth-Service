@@ -29,7 +29,9 @@ namespace BS_Web_Api.Controllers
         [HttpPost("register")]
         public ActionResult<AuthResponse> Register(AuthRequest request)
         {
-            User savedUser = _userService.GetByUserName(request.Email);
+            try
+            {
+                User savedUser = _userService.GetByUserName(request.Email);
             if (savedUser != null)
             {
                 return BadRequest("This Email is already used");
@@ -66,61 +68,66 @@ namespace BS_Web_Api.Controllers
             };
 
             return Ok(response);
+            }
+            catch (Exception e)
+            {
+
+
+                Console.WriteLine(e);
+                return BadRequest(e);
+            }
 
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login(AuthRequest request)
+        public ActionResult<AuthResponse> Login(AuthRequestLogDto request)
         {
-            var user = _userService.GetByUserName(request.Email);
-            if (user==null)
+            try
             {
-                return BadRequest("User not found.");
-            }
-
-            if (!_authHelper.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-            {
-                return BadRequest("Wrong password.");
-            }
-
-            string token = _authHelper.CreateToken(user);
-
-            var refreshToken = _authHelper.GenerateRefreshToken(user.Id.ToString());
-
-            UserDto userDto = new UserDto
-            {
-                Id = user.Id.ToString(),
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Role = user.Role,
-                UserName = user.UserName,
-            };
-            AuthResponse response =
-                new AuthResponse
+                var user = _userService.GetByUserName(request.Email);
+                if (user == null)
                 {
-                    AccesToken = token,
-                    RefreshToken = refreshToken.Token,
-                    User = userDto
-                };
-
-            return Ok(new
-            {
-                token = token,
-                
-                user = new
-                {
-                    user.Email,
-                    user.FirstName,
-                    user.LastName,
-                    user.Role,
+                    return BadRequest("User not found.");
                 }
 
-            });
+                if (!_authHelper.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+                {
+                    return BadRequest("Wrong password.");
+                }
+
+                string token = _authHelper.CreateToken(user);
+
+                var refreshToken = _authHelper.GenerateRefreshToken(user.Id.ToString());
+
+                UserDto userDto = new UserDto
+                {
+                    Id = user.Id.ToString(),
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Role = user.Role,
+                    UserName = user.UserName,
+                };
+                AuthResponse response =
+                    new AuthResponse
+                    {
+                        AccesToken = token,
+                        RefreshToken = refreshToken.Token,
+                        User = userDto
+                    };
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine(e);
+                return BadRequest(e);
+            }
         }
 
         [HttpPost("refresh-token")]
-        public async Task<ActionResult<RefreshTokenResponse>> RefreshToken(RefreshTokenRequest request)
+        public ActionResult<RefreshTokenResponse> RefreshToken(RefreshTokenRequest request)
         {
             try
             {
